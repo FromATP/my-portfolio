@@ -18,34 +18,34 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /** Servlet that returns some example content. TODO: modify this file to handle comments data */
-@WebServlet("/data")
+@WebServlet("/vote-data")
 public class DataServlet extends HttpServlet {
-  
-  private ArrayList<String> comments;
-  
-  @Override
-  public void init() {
-    comments = new ArrayList<String>();
-    comments.add("Hello~ I am ATP.");
-    comments.add("I'm just trying to add some new features.");
-    comments.add("Ohhhhhh~~~");
-  }
+
+  private Map<String, Integer> timeVotes = new HashMap<>();
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json;");
-    response.getWriter().println(convertToJsonUsingGson(comments));
+    response.setContentType("application/json");
+    Gson gson = new Gson();
+    String json = gson.toJson(timeVotes);
+    response.getWriter().println(json);
   }
 
-  private String convertToJsonUsingGson(ArrayList arrlist) {
-    Gson gson = new Gson();
-    String json = gson.toJson(arrlist);
-    return json;
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String time = request.getParameter("time");
+    int currentVotes = timeVotes.containsKey(time) ? timeVotes.get(time) : 0;
+    timeVotes.put(time, currentVotes + 1);
+
+    response.sendRedirect("/vote.html");
   }
 }
