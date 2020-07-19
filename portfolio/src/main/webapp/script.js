@@ -12,38 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Adds a random greeting to the page.
- */
-function addRandomGreeting() {
-  const greetings =
-      ['Hello world!', '¡Hola Mundo!', '你好，世界！', 'Bonjour le monde!'];
+google.charts.load('current', {'packages': ['corechart']});
+google.charts.setOnLoadCallback(drawChart);
 
-  // Pick a random greeting.
-  const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+function drawChart() {
+  fetch('/vote-data').then(response => response.json())
+  .then((timeVotes) => {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'time');
+    data.addColumn('number', 'Votes');
+    Object.keys(timeVotes).forEach((time) => {
+      data.addRow([time, timeVotes[time]]);
+    });
 
-  // Add it to the page.
-  const greetingContainer = document.getElementById('greeting-container');
-  greetingContainer.innerText = greeting;
-}
+    const options = {
+      'title': 'Predicted time',
+      'width':600,
+      'height':500
+    };
 
-//fetch a comment
-function getMessage() {
-  fetch('/data').then(response => response.json()).then((helloMsg) => {
-    const arrListElement = document.getElementById('arrlist-container');
-    arrListElement.innerHTML = '';
-    arrListElement.appendChild(
-        createListElement('1: ' + helloMsg.get(0)));
-    arrListElement.appendChild(
-        createListElement('2: ' + helloMsg.get(1)));
-    arrListElement.appendChild(
-        createListElement('3: ' + helloMsg.get(2)));
+    const chart = new google.visualization.ColumnChart(
+        document.getElementById('chart-container'));
+    chart.draw(data, options);
   });
-}
-
-/** Creates an <li> element containing text. */
-function createListElement(text) {
-  const liElement = document.createElement('li');
-  liElement.innerText = text;
-  return liElement;
 }
