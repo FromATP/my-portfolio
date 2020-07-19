@@ -23,61 +23,60 @@ import java.util.Set;
 
 public final class FindMeetingQuery {
 
-    public Collection<TimeRange> query(Collection<Event> events, MeetingRequest request) {
+  public Collection<TimeRange> query(Collection<Event> events, MeetingRequest request) {
        
-        // Initialization
-        ArrayList<TimeRange> TimeSegList = new ArrayList<TimeRange>();
-        ArrayList<TimeRange> Answer = new ArrayList<TimeRange>();
+    // Initialization
+    ArrayList<TimeRange> timeSegList = new ArrayList<TimeRange>();
+    ArrayList<TimeRange> answer = new ArrayList<TimeRange>();
         
-        // Find all invalid time ranges
-        for (Event nowEvent: events) {
+    // Find all invalid time ranges
+    for (Event nowEvent : events) {
             
-            Set<String> eventAttendees = nowEvent.getAttendees();
-            Collection<String> requestAttendees = request.getAttendees();
-            boolean flag = false;
+      Set<String> eventAttendees = nowEvent.getAttendees();
+      Collection<String> requestAttendees = request.getAttendees();
+      boolean flag = false;
 
-            for (String nowAtt: requestAttendees) {
-                if (eventAttendees.contains(nowAtt)) {
-                    flag = true;
-                    break;
-                }
-            }
-
-            if (flag == true) {
-                TimeSegList.add(nowEvent.getWhen());
-            }
-
-            /* Here the use of retainAll seems to be wrong... but why?
-            eventAttendees.retainAll(request.getAttendees());
-            if (eventAttendees.size() > 0) {
-                TimeSegList.add(nowEvent.getWhen());
-            }
-            */
+      for (String nowAtt : requestAttendees) {
+        if (eventAttendees.contains(nowAtt)) {
+          flag = true;
+          break;
         }
+      }
 
-        // sort the time ranges by their start time
-        Collections.sort(TimeSegList, TimeRange.ORDER_BY_START);
+      if (flag) {
+        timeSegList.add(nowEvent.getWhen());
+      }
 
-        // R: point to the latest available time
-        int R = TimeRange.START_OF_DAY;
-        for (TimeRange nowSeg: TimeSegList) {
-            
-            // if there's a valid time range, add into Answer
-            if (nowSeg.start() > R && nowSeg.start() - R >= request.getDuration()) {
-                Answer.add(TimeRange.fromStartEnd(R, nowSeg.start(), false));
-            }
-
-            // update R
-            if (nowSeg.end() > R) {
-                R = nowSeg.end();
-            }
-        }
-
-        // add the last time range
-        if (TimeRange.END_OF_DAY - R + 1 >= request.getDuration()) {
-            Answer.add(TimeRange.fromStartEnd(R, TimeRange.END_OF_DAY, true));
-        }
-
-        return Answer;
+      /* an alternative to line 39-48
+      if (!eventAttendees.disjoint(requestAttendees) {
+        timeSegList.add(nowEvent.getWhen());
+      }
+      */
     }
+
+    // sort the time ranges by their start time
+    Collections.sort(timeSegList, TimeRange.ORDER_BY_START);
+
+    // lastUncover: point to the latest available time
+    int lastUncover = TimeRange.START_OF_DAY;
+    for (TimeRange nowSeg: timeSegList) {
+            
+      // if there's a valid time range, add into answer
+      if (nowSeg.start() > lastUncover && nowSeg.start() - lastUncover >= request.getDuration()) {
+        answer.add(TimeRange.fromStartEnd(lastUncover, nowSeg.start(), false));
+      }
+
+      // update lastUncover
+      if (nowSeg.end() > lastUncover) {
+         lastUncover = nowSeg.end();
+      }
+    }
+
+    // add the last time range
+    if (TimeRange.END_OF_DAY - lastUncover + 1 >= request.getDuration()) {
+      answer.add(TimeRange.fromStartEnd(lastUncover, TimeRange.END_OF_DAY, true));
+    }
+
+    return answer;
+  }
 }

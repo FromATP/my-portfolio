@@ -35,15 +35,16 @@ public class DataServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     response.setContentType("application/json");
-    Gson gson = new Gson();
-    String json = gson.toJson(timeVotes);
-    response.getWriter().println(json);
+    response.getWriter().println(new Gson().toJson(timeVotes));
   }
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String time = request.getParameter("time");
-    int currentVotes = timeVotes.containsKey(time) ? timeVotes.get(time) : 0;
+
+    // if time is not in timeVotes, the "getOrDefault" functions returns the "default" value.
+    int currentVotes = timeVotes.put(time, timeVotes.getOrDefault(time, 0) + 1);
+    
     timeVotes.put(time, currentVotes + 1);
 
     response.sendRedirect("/vote.html");
